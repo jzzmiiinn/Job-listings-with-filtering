@@ -16,12 +16,68 @@ interface Job {
   tools: string[];
 }
 
+const filterBar = document.getElementById("filter-bar");
+const selectedTagsContainer = document.getElementById("selected-tags");
+const clearBtn = document.getElementById("clear-btn");
 const jobList = document.getElementById("jobs-list");
 
-const response = await fetch("/data.json");
-const jobs: Job[] = await response.json();
+let selectedTags: string[] = [];
 
-function filterJobs(selectedTags: string[]) {
+clearBtn?.addEventListener("click", () => {
+  selectedTags = [];
+  renderSelectedTags();
+  filterJobs();
+});
+
+function renderSelectedTags() {
+  if (!selectedTagsContainer) return;
+
+  selectedTagsContainer.innerHTML = "";
+
+  if (selectedTags.length === 0) {
+    filterBar?.classList.add("hidden");
+    return;
+  }
+
+  filterBar?.classList.remove("hidden");
+
+  selectedTags.forEach((tag) => {
+    const tagElement = document.createElement("div");
+
+    tagElement.classList.add(
+      "flex",
+      "items-center",
+      "bg-[hsl(180,52%,96%)]",
+      "text-[hsl(180,29%,50%)]",
+      "font-bold",
+      "rounded-md",
+      "overflow-hidden",
+    );
+
+    tagElement.innerHTML = `
+      <span class="px-2 py-1">${tag}</span>
+
+      <button
+        class="bg-[hsl(180,29%,50%)] text-white px-2 py-1"
+      >
+        ×
+      </button>
+    `;
+
+    const removeBtn = tagElement.querySelector("button");
+
+    removeBtn?.addEventListener("click", () => {
+      selectedTags = selectedTags.filter((selectedTag) => selectedTag !== tag);
+
+      renderSelectedTags();
+      filterJobs();
+    });
+
+    selectedTagsContainer.append(tagElement);
+  });
+}
+
+function filterJobs() {
   const filteredJobs = jobs.filter((job) => {
     const jobTags = [job.role, job.level, ...job.languages, ...job.tools];
 
@@ -30,6 +86,9 @@ function filterJobs(selectedTags: string[]) {
 
   renderJobs(filteredJobs);
 }
+
+const response = await fetch("/data.json");
+const jobs: Job[] = await response.json();
 
 function renderJobs(jobs: Job[]) {
   if (!jobList) return;
@@ -41,7 +100,8 @@ function renderJobs(jobs: Job[]) {
 
     li.classList.add(
       "job-card",
-      "w-[900px]",
+      "w-[90%]",
+      "max-w-[900px]",
       "flex",
       "flex-col",
       "gap-4",
@@ -54,12 +114,12 @@ function renderJobs(jobs: Job[]) {
     li.innerHTML = `
       <div
         id="job-card"
-        class="flex flex-row justify-between items-center"
+        class="flex flex-col gap-5 md:flex-row md:justify-between md:items-center"
       >
         
         <div
           id="left-side"
-          class="flex flex-row gap-4 items-center w-[250px]"
+          class="flex flex-row gap-4 items-center"
         >
           
           <img
@@ -110,8 +170,8 @@ function renderJobs(jobs: Job[]) {
           </div>
         </div>
 
-        <div class="right-side">
-          <ul class="flex flex-row gap-4">
+        <div class="right-side w-full md:w-auto">
+          <ul class="flex flex-wrap gap-2 md:gap-4">
             ${[job.role, job.level, ...job.languages, ...job.tools]
               .map(
                 (tag) => `
@@ -140,3 +200,20 @@ function renderJobs(jobs: Job[]) {
 }
 
 renderJobs(jobs);
+
+document.addEventListener("click", (event) => {
+  const target = event.target as HTMLElement;
+
+  if (!target.classList.contains("tag")) return;
+
+  const tag = target.dataset.tag;
+
+  if (!tag) return;
+
+  if (!selectedTags.includes(tag)) {
+    selectedTags.push(tag);
+  }
+
+  renderSelectedTags();
+  filterJobs();
+});
