@@ -1,60 +1,142 @@
-import './style.css'
-import heroImg from './assets/hero.png'
-import typescriptLogo from './assets/typescript.svg'
-import viteLogo from './assets/vite.svg'
-import { setupCounter } from './counter.ts'
+import "./style.css";
 
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-<section id="center">
-  <div class="hero">
-    <img src="${heroImg}" class="base" width="170" height="179">
-    <img src="${typescriptLogo}" class="framework" alt="TypeScript logo"/>
-    <img src="${viteLogo}" class="vite" alt="Vite logo" />
-  </div>
-  <div>
-    <h1>Get started</h1>
-    <p>Edit <code>src/main.ts</code> and save to test <code>HMR</code></p>
-  </div>
-  <button id="counter" type="button" class="counter"></button>
-</section>
+interface Job {
+  id: number;
+  company: string;
+  logo: string;
+  new: boolean;
+  featured: boolean;
+  position: string;
+  role: string;
+  level: string;
+  postedAt: string;
+  contract: string;
+  location: string;
+  languages: string[];
+  tools: string[];
+}
 
-<div class="ticks"></div>
+const jobList = document.getElementById("jobs-list");
 
-<section id="next-steps">
-  <div id="docs">
-    <svg class="icon" role="presentation" aria-hidden="true"><use href="/icons.svg#documentation-icon"></use></svg>
-    <h2>Documentation</h2>
-    <p>Your questions, answered</p>
-    <ul>
-      <li>
-        <a href="https://vite.dev/" target="_blank">
-          <img class="logo" src="${viteLogo}" alt="" />
-          Explore Vite
-        </a>
-      </li>
-      <li>
-        <a href="https://www.typescriptlang.org" target="_blank">
-          <img class="button-icon" src="${typescriptLogo}" alt="">
-          Learn more
-        </a>
-      </li>
-    </ul>
-  </div>
-  <div id="social">
-    <svg class="icon" role="presentation" aria-hidden="true"><use href="/icons.svg#social-icon"></use></svg>
-    <h2>Connect with us</h2>
-    <p>Join the Vite community</p>
-    <ul>
-      <li><a href="https://github.com/vitejs/vite" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#github-icon"></use></svg>GitHub</a></li>
-      <li><a href="https://chat.vite.dev/" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#discord-icon"></use></svg>Discord</a></li>
-      <li><a href="https://x.com/vite_js" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#x-icon"></use></svg>X.com</a></li>
-      <li><a href="https://bsky.app/profile/vite.dev" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#bluesky-icon"></use></svg>Bluesky</a></li>
-    </ul>
-  </div>
-</section>
+const response = await fetch("/data.json");
+const jobs: Job[] = await response.json();
 
-<div class="ticks"></div>
-<section id="spacer"></section>
-`
+function filterJobs(selectedTags: string[]) {
+  const filteredJobs = jobs.filter((job) => {
+    const jobTags = [job.role, job.level, ...job.languages, ...job.tools];
 
-setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+    return selectedTags.every((tag) => jobTags.includes(tag));
+  });
+
+  renderJobs(filteredJobs);
+}
+
+function renderJobs(jobs: Job[]) {
+  if (!jobList) return;
+
+  jobList.innerHTML = "";
+
+  jobs.forEach((job) => {
+    const li = document.createElement("li");
+
+    li.classList.add(
+      "job-card",
+      "w-[900px]",
+      "flex",
+      "flex-col",
+      "gap-4",
+      "p-4",
+      "bg-white",
+      "rounded-lg",
+      "shadow-md",
+    );
+
+    li.innerHTML = `
+      <div
+        id="job-card"
+        class="flex flex-row justify-between items-center"
+      >
+        
+        <div
+          id="left-side"
+          class="flex flex-row gap-4 items-center w-[250px]"
+        >
+          
+          <img
+            src="${job.logo}"
+            alt="${job.company} Logo"
+            class="w-18 h-18"
+          />
+
+          <div id="job-info" class="flex flex-col gap-2">
+            
+            <div
+              id="job-titles"
+              class="flex flex-row gap-4 items-center"
+            >
+              <p class="text-[hsl(180,29%,50%)] font-bold">
+                ${job.company}
+              </p>
+
+              ${
+                job.new
+                  ? `<span class="bg-[hsl(180,29%,50%)] font-bold text-white rounded-2xl py-1 px-2 text-xs">
+                      NEW!
+                    </span>`
+                  : ""
+              }
+
+              ${
+                job.featured
+                  ? `<span class="bg-[hsl(180,14%,20%)] font-bold text-white rounded-2xl py-1 px-2 text-xs">
+                      FEATURED
+                    </span>`
+                  : ""
+              }
+            </div>
+
+            <p class="font-bold">
+              ${job.position}
+            </p>
+
+            <div class="flex flex-row gap-4 text-gray-600">
+              <p>${job.postedAt}</p>
+              <span>·</span>
+              <p>${job.contract}</p>
+              <span>·</span>
+              <p>${job.location}</p>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="right-side">
+          <ul class="flex flex-row gap-4">
+            ${[job.role, job.level, ...job.languages, ...job.tools]
+              .map(
+                (tag) => `
+                  <li
+                    data-tag="${tag}"
+                    class="tag bg-[hsl(180,52%,96%)]
+                           text-[hsl(180,29%,50%)]
+                           p-1
+                           font-bold
+                           text-sm
+                           cursor-pointer"
+                  >
+                    ${tag}
+                  </li>
+                `,
+              )
+              .join("")}
+          </ul>
+        </div>
+
+      </div>
+    `;
+
+    jobList.append(li);
+  });
+}
+
+renderJobs(jobs);

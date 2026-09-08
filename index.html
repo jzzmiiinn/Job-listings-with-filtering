@@ -6,8 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>static-job-listings-master</title>
   </head>
-  <body>
-    <div id="app"></div>
+
+  <body class="min-h-screen bg-[hsl(180,52%,96%)]">
+    <div
+      class="bg-[hsl(180,29%,50%)] h-32 w-full bg-[url('/assets/bg-header-mobile.svg')] bg-cover bg-center md:h-40 md:bg-[url('/assets/bg-header-desktop.svg')]"
+    ></div>
+    <main>
+      <div
+        id="jobs-list"
+        class="flex flex-col gap-5 justify-center items-center"
+      ></div>
+    </main>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
